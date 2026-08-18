@@ -1,1 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
+    <title>Zentrix Services | Litematic Viewer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #080808;
+            color: white;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        header {
+            width: 100%;
+            padding: 18px 20px;
+            background: #0d0d0d;
+            border-bottom: 1px solid #252525;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 21px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .logo span {
+            color: #ff2020;
+        }
+
+        .status {
+            font-size: 12px;
+            color: #6cff8b;
+            background: #102015;
+            border: 1px solid #1f5b2c;
+            padding: 7px 10px;
+            border-radius: 20px;
+        }
+
+        /* =========================
+           HERO
+        ========================= */
+
+        .hero {
+            text-align: center;
+            padding: 45px 20px 30px;
+        }
+
+        .hero h1 {
+            font-size: clamp(30px, 8vw, 58px);
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .hero h1 span {
+            color: #ff2020;
+        }
+
+        .hero p {
+            max-width: 650px;
+            margin: auto;
+            color: #aaa;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        /* =========================
+           UPLOAD AREA
+        ========================= */
+
+        .viewer-card {
+            width: min(100% - 30px, 1000px);
+            margin: 10px auto 30px;
+            background: #101010;
+            border: 1px solid #292929;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 15px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .viewer-top {
+            padding: 18px;
+            border-bottom: 1px solid #252525;
+        }
+
+        .viewer-top h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .viewer-top p {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .upload-area {
+            margin: 20px;
+            min-height: 220px;
+            border: 2px dashed #3a3a3a;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 25px;
+            transition: 0.2s;
+        }
+
+        .upload-area.dragover {
+            border-color: #ff2020;
+            background: rgba(255, 32, 32, 0.08);
+        }
+
+        .upload-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        .upload-area h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-button {
+            display: inline-block;
+            background: #ff2020;
+            color: white;
+            font-weight: 800;
+            padding: 14px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .upload-button:hover {
+            background: #ff3838;
+            transform: translateY(-1px);
+        }
+
+        .upload-button:active {
+            transform: scale(0.97);
+        }
+
+        /* =========================
+           FILE INFO
+        ========================= */
+
+        .file-info {
+            display: none;
+            margin: 0 20px 20px;
+            padding: 15px;
+            background: #171717;
+            border: 1px solid #292929;
+            border-radius: 12px;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            font-weight: 800;
+            word-break: break-all;
+        }
+
+        .file-size {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* =========================
+           VIEWER
+        ========================= */
+
+        .viewer {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background:
+                linear-gradient(
+                    45deg,
+                    #111 25%,
+                    #151515 25%,
+                    #151515 50%,
+                    #111 50%,
+                    #111 75%,
+                    #151515 75%
+                );
+            background-size: 40px 40px;
+            border-top: 1px solid #252525;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .viewer-placeholder {
+            text-align: center;
+            color: #777;
+            padding: 25px;
+        }
+
+        .viewer-placeholder .cube {
+            font-size: 70px;
+            margin-bottom: 15px;
+        }
+
+        .viewer-placeholder h3 {
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        /* =========================
+           CONTROLS
+        ========================= */
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            flex-wrap: wrap;
+            border-top: 1px solid #252525;
+        }
+
+        .control-button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #303030;
+            color: white;
+            border-radius: 9px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .control-button:hover {
+            background: #242424;
+        }
+
+        /* =========================
+           INFO CARDS
+        ========================= */
+
+        .features {
+            width: min(100% - 30px, 1000px);
+            margin: 0 auto 50px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .feature {
+            background: #101010;
+            border: 1px solid #252525;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .feature-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .feature h3 {
+            margin-bottom: 7px;
+        }
+
+        .feature p {
+            color: #888;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #666;
+            border-top: 1px solid #202020;
+            font-size: 13px;
+        }
+
+        footer strong {
+            color: white;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 700px) {
+
+            header {
+                padding: 15px;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .hero {
+                padding: 35px 15px 25px;
+            }
+
+            .viewer-card {
+                width: calc(100% - 20px);
+                border-radius: 14px;
+            }
+
+            .upload-area {
+                margin: 12px;
+                min-height: 200px;
+            }
+
+            .viewer {
+                height: 420px;
+            }
+
+            .features {
+                width: calc(100% - 20px);
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                padding: 10px;
+            }
+
+            .control-button {
+                min-width: calc(50% - 5px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">
+        ZENTRIX <span>SERVICES</span>
+    </div>
+
+    <div class="status">
+        ● ONLINE
+    </div>
+</header>
+
+
+<section class="hero">
+
+    <h1>
+        Litematic <span>3D Viewer</span>
+    </h1>
+
+    <p>
+        Upload your Minecraft Litematica schematic and preview your build
+        directly from your phone or computer.
+    </p>
+
+</section>
+
+
+<main class="viewer-card">
+
+    <div class="viewer-top">
+        <h2>🧱 Schematic Viewer</h2>
+
+        <p>
+            Select a .litematic file from your device.
+        </p>
+    </div>
+
+
+    <div
+        class="upload-area"
+        id="uploadArea"
+    >
+
+        <div class="upload-icon">
+            📁
+        </div>
+
+        <h3>
+            Upload your Litematic
+        </h3>
+
+        <p>
+            Choose a .litematic file from your phone or computer.
+        </p>
+
+        <label
+            class="upload-button"
+            for="fileInput"
+        >
+            Choose Litematic
+        </label>
+
+        <input
+            id="fileInput"
+            type="file"
+            accept=".litematic"
+        >
+
+    </div>
+
+
+    <div
+        class="file-info"
+        id="fileInfo"
+    >
+
+        <div
+            class="file-name"
+            id="fileName"
+        ></div>
+
+        <div
+            class="file-size"
+            id="fileSize"
+        ></div>
+
+    </div>
+
+
+    <div class="viewer">
+
+        <div class="viewer-placeholder">
+
+            <div class="cube">
+                🧱
+            </div>
+
+            <h3>
+                3D Viewer
+            </h3>
+
+            <p>
+                Upload a Litematic to begin.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="controls">
+
+        <button
+            class="control-button"
+            onclick="resetViewer()"
+        >
+            🔄 Reset View
+        </button>
+
+        <button
+            class="control-button"
+            onclick="fullscreenViewer()"
+        >
+            ⛶ Fullscreen
+        </button>
+
+    </div>
+
+</main>
+
+
+<section class="features">
+
+    <div class="feature">
+
+        <div class="feature-icon">
+            📱
+        </div>
+
+        <h3>
+            Phone Friendly
+        </h3>
+
+        <p>
+            Designed to work on Android, iPhone, tablets and desktop.
+        </p>
+
+    </div>
+
+
+    <div class="feature">
+
+        <div class="feature-icon">
+            🧱
+        </div>
+
+        <h3>
+            Litematic Support
+        </h3>
+
+        <p>
+            Upload Minecraft Litematica .litematic schematic files.
+        </p>
+
+    </div>
+
+
+    <div class="feature">
+
+        <div class="feature-icon">
+            🔒
+        </div>
+
+        <h3>
+            Local Files
+        </h3>
+
+        <p>
+            Your selected file stays in your browser unless a viewer
+            specifically needs to request external resources.
+        </p>
+
+    </div>
+
+</section>
+
+
+<footer>
+
+    <strong>Zentrix Services</strong>
+
+    <br><br>
+
+    Minecraft schematic tools and services.
+
+</footer>
+
+
+<script>
+
+    const fileInput =
+        document.getElementById("fileInput");
+
+    const uploadArea =
+        document.getElementById("uploadArea");
+
+    const fileInfo =
+        document.getElementById("fileInfo");
+
+    const fileName =
+        document.getElementById("fileName");
+
+    const fileSize =
+        document.getElementById("fileSize");
+
+
+    /*
+    ==========================================
+    FILE UPLOAD
+    ==========================================
+    */
+
+    fileInput.addEventListener(
+        "change",
+        function () {
+
+            if (!this.files || !this.files.length) {
+                return;
+            }
+
+            handleFile(this.files[0]);
+
+        }
+    );
+
+
+    /*
+    ==========================================
+    DRAG & DROP
+    ==========================================
+    */
+
+    uploadArea.addEventListener(
+        "dragover",
+        function (event) {
+
+            event.preventDefault();
+
+            uploadArea.classList.add("dragover");
+
+        }
+    );
+
+
+    uploadArea.addEventListener(
+        "dragleave",
+        function () {
+
+            uploadArea.classList.remove("dragover");
+
+        }
+    );
+
+
+    uploadArea.addEventListener(
+        "drop",
+        function (event) {
+
+            event.preventDefault();
+
+            uploadArea.classList.remove("dragover");
+
+            const files = event.dataTransfer.files;
+
+            if (!files || !files.length) {
+                return;
+            }
+
+            handleFile(files[0]);
+
+        }
+    );
+
+
+    /*
+    ==========================================
+    PROCESS FILE
+    ==========================================
+    */
+
+    function handleFile(file) {
+
+        const name =
+            file.name.toLowerCase();
+
+        if (!name.endsWith(".litematic")) {
+
+            alert(
+                "Please select a .litematic file."
+            );
+
+            return;
+        }
+
+
+        fileName.textContent =
+            "📄 " + file.name;
+
+
+        fileSize.textContent =
+            formatFileSize(file.size);
+
+
+        fileInfo.classList.add("show");
+
+
+        /*
+        IMPORTANT:
+        The actual Litematic parser/3D renderer
+        is not included in this single-page shell.
+        */
+
+        alert(
+            "Litematic selected successfully! " +
+            "The next step is connecting the real 3D Litematic renderer."
+        );
+
+    }
+
+
+    /*
+    ==========================================
+    FILE SIZE
+    ==========================================
+    */
+
+    function formatFileSize(bytes) {
+
+        if (bytes < 1024) {
+            return bytes + " B";
+        }
+
+        if (bytes < 1024 * 1024) {
+            return (
+                (bytes / 1024).toFixed(2)
+                + " KB"
+            );
+        }
+
+        return (
+            (bytes / (1024 * 1024)).toFixed(2)
+            + " MB"
+        );
+
+    }
+
+
+    /*
+    ==========================================
+    RESET
+    ==========================================
+    */
+
+    function resetViewer() {
+
+        fileInput.value = "";
+
+        fileInfo.classList.remove("show");
+
+        fileName.textContent = "";
+
+        fileSize.textContent = "";
+
+        alert(
+            "Viewer reset."
+        );
+
+    }
+
+
+    /*
+    ==========================================
+    FULLSCREEN
+    ==========================================
+    */
+
+    function fullscreenViewer() {
+
+        const viewer =
+            document.querySelector(".viewer");
+
+        if (!document.fullscreenElement) {
+
+            viewer.requestFullscreen()
+                .catch(() => {
+                    alert(
+                        "Fullscreen isn't available on this device."
+                    );
+                });
+
+        } else {
+
+            document.exitFullscreen();
+
+        }
+
+    }
+
+</script>
+
+</body>
+</html>
